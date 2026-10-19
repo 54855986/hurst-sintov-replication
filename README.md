@@ -9,22 +9,22 @@ This repository contains the materials, the power simulation and the analysis co
 | Folder | What it contains |
 |---|---|
 | `materials/` | The full questionnaire, the informed consent form and the debriefing |
-| `pilot/` | The report of the pilot study with students |
-| `analysis/power/` | The power simulation (`.qmd`), its rendered report (`.html`) and the saved simulation results (`.rds`) |
-| `analysis/preregistered/` | The preregistered analysis, tested on one simulated data set (`.qmd`), and its rendered report (`.html`) |
+| `pilot/` | The report of the pilot study |
+| `analysis/power/` | The power simulation (`.md`) and the simulated data (`.rds`)|
+| `analysis/preregistered/` | The preregistered analysis, tested on one simulated data set (`.md`) |
 | `data/` | The anonymized data (added after data collection) |
 
 ## Viewing the Results
 
-The rendered reports (`.html`) contain the text, the code, the tables and the figures. Download a report and open it in a web browser to read it without installing anything.
+The files (`.md`) contain the text, the code, the tables and the figures.
 
 ## Running the Code
 
-The analyses run in R with Quarto (included in RStudio).
+The analyses run in R.
 
 1. Install the R packages `effectsize`, `MASS`, `ggplot2`, `patchwork` and `knitr`.
 2. Download PROCESS for R (Hayes) from https://www.processmacro.org and save it as `analysis/PROCESS/process.R`. PROCESS is not included here, because its license does not allow redistribution.
-3. Open a `.qmd` file in RStudio and click **Render**.
+3. Open a `.md` file in RStudio and click **Render**.
 
 The power simulation reuses its saved results (`power_results_simulated.rds`) and renders in a few seconds. Without the saved results, it runs the full simulation, which takes about 75 minutes.
 
