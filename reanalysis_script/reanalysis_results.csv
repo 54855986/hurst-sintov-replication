@@ -1,0 +1,5 @@
+"H","d","lo","hi"
+"H1 induction -> felt guilt",1.1,0.93,1.26
+"H2 induction -> donation",-0.27,-0.51,-0.02
+"H3 felt guilt -> donation",0.27,0.11,0.43
+"H4 indirect effect through felt guilt (log odds)",0.53,0.21,0.91
