@@ -1,0 +1,126 @@
+---
+title: "Preregistered analysis tested on simulated data"
+subtitle: "Being made to feel guilty, anticipated pleasantness, moral rightness and donation"
+format:
+  html:
+    embed-resources: true
+    toc: true
+    number-sections: true
+    theme: cosmo
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+# The report reads the results saved by analysis_h1_h9.R in the same folder.
+# It does not run the analysis.
+library(ggplot2)
+res <- read.csv("analysis_results.csv", check.names = FALSE)
+
+# Is the results file older than the script?
+t_res    <- file.info("analysis_results.csv")$mtime
+t_script <- file.info("analysis_h1_h9.R")$mtime
+stale    <- t_script > t_res
+
+autumn <- c(rust = "#B7472A", orange = "#E07B39", gold = "#D4A72C",
+            olive = "#7A8B3A", plum = "#7B3F61", brown = "#6B4226")
+```
+
+```{r stale-warning, results = "asis"}
+if (stale) cat("::: callout-warning\n## Results are out of date\nThe analysis script was changed after these results were saved. Run `analysis_h1_h9.R` again, then render this report.\n:::\n")
+```
+
+Results saved on `r format(t_res, "%d %B %Y, %H:%M")`.
+
+# Why test the analysis on simulated data
+
+**The problem.** In a preregistration, the analysis must be fixed before any data exist. If the code had a mistake, we would only find it after data collection, when changing it could look like adjusting the analysis to the results.
+
+**The solution.** We created one artificial data set with exactly the structure our real data will have: the same groups, the same variables and the same number of participants. We then ran the complete preregistered analysis on it.
+
+**What this shows, and what it does not show.**
+
+- It shows that every model runs, that every effect is converted to Cohen's *d* correctly, and that each hypothesis receives one of the four planned outcomes.
+- It does **not** predict our results. The effects in the artificial data were set by hand to exercise the code. **None of the numbers below are findings.**
+
+# The design
+
+Participants are randomly assigned to four groups, which cross the **guilt induction** (guilt vs. control) with **ratings of the behavioral choice** (rating vs. no rating).
+
+| Groups | Participants | What they do | Hypotheses |
+|---|---|---|---|
+| No-rating, guilt and control | 700 each | The procedure of Hurst and Sintov (2022, Study 2) | H2 to H4 |
+| Rating, guilt and control | 500 each | The same procedure, plus ratings of how pleasant and how morally right keeping and donating \$25 would be, before the raffle description | H5 to H9 |
+| All four groups | 2,400 | | H1 |
+
+# How each hypothesis is tested
+
+| H | Claim | Groups | Model |
+|---|---|---|---|
+| H1 | The guilt induction raises experienced guilt | all | linear regression |
+| H2 | The guilt induction lowers donation | no-rating | logistic regression |
+| H3 | Guiltier people donate more | no-rating | mediation model of Hurst and Sintov, guilt and pride as parallel mediators (PROCESS model 4) |
+| H4 | The path through experienced guilt points toward donating | no-rating | same mediation model, indirect effect |
+| H5 | Guilt makes keeping more pleasant, relative to donating | rating | linear regression |
+| H6 | Guilt makes donating more morally right, relative to keeping | rating | linear regression |
+| H7 | Expecting keeping to feel more pleasant goes with keeping | rating | logistic regression with both differences |
+| H8 | Judging donating more right goes with donating | rating | same model |
+| H9 | Pleasantness is more strongly related to the choice than rightness | rating | same model, sum of the H7 and H8 effects |
+
+All models control for environmental self-identity, gender (woman, man, another gender or not stated), age, political orientation, and education. All effects are expressed as Cohen's *d*.
+
+# How each result is read
+
+Each hypothesis is decided from the 95% confidence interval of its effect, compared with zero and with the smallest effect size of interest, *d* = 0.20.
+
+| Outcome | Where the 95% CI lies |
+|---|---|
+| Supported | entirely on the predicted side of zero |
+| Not supported | entirely below 0.20 in the predicted direction (including the wrong side of zero) |
+| Supported but too small to matter | on the predicted side of zero and below 0.20 |
+| Inconclusive | it includes both zero and 0.20 |
+
+H9 is read as a comparison only if H7 and H8 point in their predicted directions.
+
+# Results on the simulated data
+
+::: callout-important
+These numbers come from artificial data. They check the code, not the theory.
+:::
+
+**What this table shows.** For each hypothesis, the effect as Cohen's *d*, its 95% confidence interval, and the outcome the decision rules gave.
+
+```{r table}
+knitr::kable(res, row.names = FALSE, align = "llcccl")
+```
+
+**What this figure shows.** Each effect as a dot with its 95% confidence interval.
+
+**How to read it.** The solid line is zero. The dashed lines are the smallest effect size of interest, +0.20 and -0.20. For a hypothesis that predicts an increase, "supported" means the whole interval lies to the right of zero. For one that predicts a decrease (H2, H7, H9), it means the whole interval lies to the left of zero. The colour shows the outcome.
+
+```{r fig-effects, fig.height = 4.5, fig.width = 7}
+ci <- res[["95% CI"]]
+res$lo  <- as.numeric(sub("^\\[(.*), .*\\]$", "\\1", ci))
+res$hi  <- as.numeric(sub("^\\[.*, (.*)\\]$", "\\1", ci))
+res$est <- as.numeric(res$d)
+res$H   <- factor(res$H, levels = rev(res$H))
+ggplot(res, aes(x = est, y = H, colour = Outcome)) +
+  geom_vline(xintercept = 0, colour = "black") +
+  geom_vline(xintercept = c(-0.20, 0.20), linetype = "dashed", colour = "black") +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0.25) +
+  geom_point(size = 2.5) +
+  scale_colour_manual(values = c(supported = unname(autumn["olive"]),
+                                 `not supported` = unname(autumn["rust"]),
+                                 `supported but too small to matter` = unname(autumn["gold"]),
+                                 inconclusive = unname(autumn["plum"])),
+                      drop = FALSE) +
+  labs(x = "Effect (Cohen's d) with 95% confidence interval", y = NULL, colour = "Outcome") +
+  theme_minimal(base_size = 11) +
+  theme(text = element_text(colour = "black"), axis.text = element_text(colour = "black"),
+        legend.position = "bottom") +
+  guides(colour = guide_legend(nrow = 2))
+```
+
+**What this means.** The analysis runs from start to end and applies the decision rules to every hypothesis. Whether a hypothesis comes out supported here depends only on the effects we put into the artificial data.
